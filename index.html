@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZuaAI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -371,7 +372,6 @@
             }
         }
 
-        /* Notification style */
         .notification {
             position: fixed;
             bottom: 20px;
@@ -395,7 +395,7 @@
     <header>
         <div class="logo">
             <h1>Zua<span>AI</span></h1>
-            <p>created by zuazuaman vice president</p>
+            <p>created by ZuaZuaman vice president</p>
         </div>
         <div class="header-controls">
             <button id="new-chat-btn"><i class="fas fa-plus"></i> New Chat</button>
@@ -407,7 +407,7 @@
         <div class="chat-container">
             <div class="welcome-message" id="welcome-message">
                 <h2>Welcome to ZuaAI</h2>
-                <p>now with real-time web access. Ask me anything!</p>
+                <p>Now with real-time web access via DuckDuckGo. Ask me anything!</p>
                 <div class="suggestions">
                     <button class="suggestion-btn">What's the latest tech news?</button>
                     <button class="suggestion-btn">Explain quantum computing</button>
@@ -443,7 +443,7 @@
 
     <script>
         // Configuration
-        const API_KEY = 'AIzaSyB47bChStIEny3fvLOokITUMrL8Hqq5h0Q'; // Replace with your actual API key
+        const API_KEY = 'AIzaSyB47bChStIEny3fvLOokITUMrL8Hqq5h0Q';
         const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
         // DOM Elements
@@ -464,20 +464,17 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Load theme preference from localStorage
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 enableDarkMode();
             }
 
-            // Load conversation history from localStorage
             const savedHistory = localStorage.getItem('conversationHistory');
             if (savedHistory) {
                 conversationHistory = JSON.parse(savedHistory);
                 renderConversationHistory();
             }
 
-            // Set up event listeners
             setupEventListeners();
         });
 
@@ -502,27 +499,48 @@
                 });
             });
 
-            // Auto-resize textarea
             userInput.addEventListener('input', () => {
                 userInput.style.height = 'auto';
                 userInput.style.height = (userInput.scrollHeight) + 'px';
             });
         }
 
-        function sendMessage() {
+        async function performWebSearch(query) {
+            try {
+                const response = await axios.get(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`);
+                return response.data.RelatedTopics.map(topic => ({
+                    title: topic.Text,
+                    link: topic.FirstURL,
+                    snippet: ''
+                }));
+            } catch (error) {
+                console.error('Web search error:', error);
+                return [];
+            }
+        }
+
+        async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
 
-            // Add user message to chat
             addMessage('user', message);
             userInput.value = '';
             userInput.style.height = 'auto';
 
-            // Show typing indicator
             showTypingIndicator(true);
             welcomeMessage.style.display = 'none';
 
-            // Prepare the request to Gemini API
+            let searchResults = [];
+            if (webAccessEnabled) {
+                searchResults = await performWebSearch(message);
+            }
+
+            const searchResultsText = searchResults.length > 0 
+                ? `\n\n[Web Search Results]\n${searchResults.map(result => (
+                    `- ${result.title}: ${result.link}`
+                )).join('\n')}\n`
+                : '';
+
             const requestData = {
                 contents: [
                     ...conversationHistory.map(msg => ({
@@ -531,9 +549,9 @@
                     })),
                     {
                         role: 'user',
-                        parts: [{ text: webAccessEnabled ? 
-                            `${message}\n\n[Perform a web search if needed to provide up-to-date information.]` : 
-                            message }]
+                        parts: [{ text: webAccessEnabled 
+                            ? `${message}\n${searchResultsText}\n[Use the provided web search results to provide up-to-date information.]`
+                            : message }]
                     }
                 ],
                 generationConfig: {
@@ -563,39 +581,36 @@
                 ]
             };
 
-            // Call Gemini API
-            fetch(`${GEMINI_API_URL}?key=${API_KEY}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(data => {
+            try {
+                const response = await fetch(`${GEMINI_API_URL}?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                const data = await response.json();
+                
                 showTypingIndicator(false);
                 
                 if (data.candidates && data.candidates[0].content.parts[0].text) {
                     const aiResponse = data.candidates[0].content.parts[0].text;
                     addMessage('ai', aiResponse, webAccessEnabled);
                     
-                    // Update conversation history
                     conversationHistory.push(
                         { role: 'user', content: message },
                         { role: 'ai', content: aiResponse }
                     );
                     
-                    // Save to localStorage
                     localStorage.setItem('conversationHistory', JSON.stringify(conversationHistory));
                 } else {
                     throw new Error('Invalid response from API');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 showTypingIndicator(false);
                 console.error('Error:', error);
                 addMessage('ai', "Sorry, I encountered an error processing your request. Please try again later.");
-            });
+            }
         }
 
         function addMessage(role, content, usedWeb = false) {
@@ -634,24 +649,12 @@
         }
 
         function formatResponse(text) {
-            // Convert markdown links to HTML
             let formattedText = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
-            
-            // Convert **bold** to <strong>
             formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
-            // Convert *italic* to <em>
             formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            
-            // Convert code blocks
             formattedText = formattedText.replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>');
-            
-            // Convert inline code
             formattedText = formattedText.replace(/`([^`]+)`/g, '<code>$1</code>');
-            
-            // Convert newlines to <br>
             formattedText = formattedText.replace(/\n/g, '<br>');
-            
             return formattedText;
         }
 
@@ -663,8 +666,6 @@
         function toggleWebAccess() {
             webAccessEnabled = !webAccessEnabled;
             webToggle.classList.toggle('active', webAccessEnabled);
-            
-            // Show notification
             showNotification(`Web access ${webAccessEnabled ? 'enabled' : 'disabled'}`);
         }
 
