@@ -3,510 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZuaAI Chatbot</title>
+    <title>ZuaAI - Powered by Gemini 2.0 Flash</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #6c63ff;
-            --secondary: #4a42e8;
-            --dark: #1a1a2e;
-            --light: #f8f9fa;
-            --chat-bg: #ffffff;
-            --user-bubble: #6c63ff;
-            --ai-bubble: #f1f1f1;
-            --text-dark: #333333;
-            --text-light: #ffffff;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--light);
-            color: var(--text-dark);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            background-color: var(--primary);
-            color: var(--text-light);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
-
-        .logo i {
-            font-size: 1.8rem;
-        }
-
-        .api-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: #4caf50;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            max-width: 1200px;
-            width: 100%;
-            margin: 0 auto;
-            background-color: var(--chat-bg);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .chat-header {
-            padding: 1rem;
-            background-color: var(--primary);
-            color: white;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 1.5rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 0.8rem 1.2rem;
-            border-radius: 1rem;
-            line-height: 1.5;
-            position: relative;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .user-message {
-            align-self: flex-end;
-            background-color: var(--user-bubble);
-            color: var(--text-light);
-            border-bottom-right-radius: 0.2rem;
-        }
-
-        .ai-message {
-            align-self: flex-start;
-            background-color: var(--ai-bubble);
-            color: var(--text-dark);
-            border-bottom-left-radius: 0.2rem;
-        }
-
-        .message-time {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-top: 0.3rem;
-            text-align: right;
-        }
-
-        .chat-input-container {
-            padding: 1rem;
-            background-color: white;
-            border-top: 1px solid #eee;
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        #chat-input {
-            flex: 1;
-            padding: 0.8rem 1rem;
-            border: 1px solid #ddd;
-            border-radius: 2rem;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        #chat-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
-        }
-
-        #send-button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #send-button:hover {
-            background-color: var(--secondary);
-            transform: scale(1.05);
-        }
-
-        #send-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .typing-indicator {
-            display: flex;
-            gap: 0.3rem;
-            padding: 0.8rem 1.2rem;
-            background-color: var(--ai-bubble);
-            border-radius: 1rem;
-            align-self: flex-start;
-            margin-bottom: 0.5rem;
-        }
-
-        .typing-dot {
-            width: 0.6rem;
-            height: 0.6rem;
-            background-color: #999;
-            border-radius: 50%;
-            animation: typingAnimation 1.4s infinite ease-in-out;
-        }
-
-        .typing-dot:nth-child(1) {
-            animation-delay: 0s;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typingAnimation {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-5px); }
-        }
-
-        .welcome-message {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
-        }
-
-        /* Responsive styles */
-        @media (max-width: 768px) {
-            .chat-container {
-                height: 100vh;
-            }
-            
-            .message {
-                max-width: 90%;
-            }
-        }
-
-        /* Dark mode */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --dark: #121212;
-                --light: #1e1e1e;
-                --chat-bg: #2d2d2d;
-                --ai-bubble: #3d3d3d;
-                --text-dark: #e0e0e0;
-                --text-light: #ffffff;
-            }
-
-            body {
-                background-color: var(--dark);
-            }
-
-            #chat-input {
-                background-color: #3d3d3d;
-                color: white;
-                border-color: #444;
-            }
-
-            .chat-input-container {
-                background-color: #252525;
-                border-top-color: #444;
-            }
-        }
-    </style>
 </head>
 <body>
     <header>
         <div class="logo">
-            <i class="fas fa-robot"></i>
-            <span>ZuaAI</span>
+            <h1>Zua<span>AI</span></h1>
+            <p>Powered by Gemini 2.0 Flash</p>
         </div>
-        <div class="api-status" id="api-status">
-            <span class="status-dot"></span>
-            <span>API Status: Loading...</span>
+        <div class="header-controls">
+            <button id="new-chat-btn"><i class="fas fa-plus"></i> New Chat</button>
+            <button id="dark-mode-toggle"><i class="fas fa-moon"></i></button>
         </div>
     </header>
 
-    <div class="chat-container">
-        <div class="chat-header">
-            Chat with ZuaAI
-        </div>
-
-        <div class="chat-messages" id="chat-messages">
-            <div class="welcome-message">
-                <h3>Welcome to ZuaAI</h3>
-                <p>Now with 2x faster responses Ask me anything!</p>
+    <main>
+        <div class="chat-container">
+            <div class="welcome-message" id="welcome-message">
+                <h2>Welcome to ZuaAI</h2>
+                <p>Powered by Google's Gemini 2.0 Flash with real-time web access. Ask me anything!</p>
+                <div class="suggestions">
+                    <button class="suggestion-btn">What's the latest tech news?</button>
+                    <button class="suggestion-btn">Explain quantum computing</button>
+                    <button class="suggestion-btn">Current weather in New York</button>
+                    <button class="suggestion-btn">Latest SpaceX launch details</button>
+                </div>
+            </div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="typing-indicator" id="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
         </div>
 
-        <div class="chat-input-container">
-            <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off">
-            <button id="send-button" disabled>
-                <i class="fas fa-paper-plane"></i>
-            </button>
+        <div class="input-container">
+            <div class="input-box">
+                <textarea id="user-input" placeholder="Ask ZuaAI anything..." rows="1"></textarea>
+                <div class="input-controls">
+                    <button id="web-toggle" class="active" title="Web Access">
+                        <i class="fas fa-globe"></i>
+                    </button>
+                    <button id="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="disclaimer">
+                <p>ZuaAI may produce inaccurate information. Powered by Google Gemini 2.0 Flash API.</p>
+            </div>
         </div>
-    </div>
+    </main>
 
-    <script>
-        // DOM Elements
-        const chatInput = document.getElementById('chat-input');
-        const sendButton = document.getElementById('send-button');
-        const chatMessages = document.getElementById('chat-messages');
-        const apiStatus = document.getElementById('api-status');
-        
-        // API Configuration for Gemini 2.0 Flash
-        const GEMINI_API_KEY = 'AIzaSyB47bChStIEny3fvLOokITUMrL8Hqq5h0Q'; // Replace with your actual API key
-        const MODEL_NAME = 'gemini-2.0-flash'; // Updated model name
-        const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`;
-        
-        // Check if input has value to enable/disable send button
-        chatInput.addEventListener('input', () => {
-            sendButton.disabled = chatInput.value.trim() === '';
-        });
-        
-        // Handle sending messages
-        async function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message) return;
-            
-            // Add user message to chat
-            addMessage(message, 'user');
-            chatInput.value = '';
-            sendButton.disabled = true;
-            
-            try {
-                // Show typing indicator
-                showTypingIndicator();
-                
-                // Get AI response with enhanced configuration
-                const aiResponse = await getAIResponse(message);
-                
-                // Remove typing indicator and add AI response
-                removeTypingIndicator();
-                addMessage(aiResponse, 'ai');
-            } catch (error) {
-                console.error('Error:', error);
-                removeTypingIndicator();
-                addMessage(`Sorry, I encountered an error: ${error.message}`, 'ai');
-            }
-        }
-        
-        // Enhanced getAIResponse function for Gemini 2.0 Flash
-        async function getAIResponse(prompt) {
-            const requestBody = {
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                safetySettings: [{
-                    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    threshold: "BLOCK_ONLY_HIGH"
-                }],
-                generationConfig: {
-                    temperature: 0.7, // Balanced creativity
-                    topP: 0.9,
-                    topK: 40,
-                    maxOutputTokens: 2048,
-                    responseMimeType: "text/plain"
-                },
-                tools: [{
-                    functionDeclarations: [{
-                        name: "search_web",
-                        description: "Search the web for up-to-date information",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                query: {
-                                    type: "string",
-                                    description: "Search query"
-                                }
-                            },
-                            required: ["query"]
-                        }
-                    }]
-                }]
-            };
-            
-            const response = await fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('API Error:', errorData);
-                throw new Error(errorData.error?.message || 'API request failed');
-            }
-            
-            const data = await response.json();
-            
-            // Handle tool calls if present
-            if (data.candidates[0].content.parts[0].functionCall) {
-                return handleFunctionCall(data.candidates[0].content.parts[0].functionCall);
-            }
-            
-            return data.candidates[0].content.parts[0].text;
-        }
-        
-        // Handle function calls (e.g., web search)
-        async function handleFunctionCall(functionCall) {
-            if (functionCall.name === "search_web") {
-                const query = functionCall.args.query;
-                addMessage(`(Searching the web for: "${query}")`, 'ai');
-                // In a real implementation, you would call a search API here
-                return "I found some information about this topic. For real web search results, please implement a search API endpoint.";
-            }
-            return "I performed an action but couldn't process the results.";
-        }
-        
-        // Add message to chat
-        function addMessage(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', `${sender}-message`);
-            
-            const messageContent = document.createElement('div');
-            messageContent.textContent = text;
-            
-            const messageTime = document.createElement('div');
-            messageTime.classList.add('message-time');
-            messageTime.textContent = getCurrentTime();
-            
-            messageDiv.appendChild(messageContent);
-            messageDiv.appendChild(messageTime);
-            chatMessages.appendChild(messageDiv);
-            
-            // Scroll to bottom
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        // Show typing indicator
-        function showTypingIndicator() {
-            const typingDiv = document.createElement('div');
-            typingDiv.classList.add('typing-indicator');
-            typingDiv.id = 'typing-indicator';
-            
-            for (let i = 0; i < 3; i++) {
-                const dot = document.createElement('div');
-                dot.classList.add('typing-dot');
-                typingDiv.appendChild(dot);
-            }
-            
-            chatMessages.appendChild(typingDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        // Remove typing indicator
-        function removeTypingIndicator() {
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-        }
-        
-        // Get current time in HH:MM format
-        function getCurrentTime() {
-            const now = new Date();
-            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        // Test API connection on load
-        async function testAPIConnection() {
-            try {
-                const testResponse = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: "Hello"
-                            }]
-                        }]
-                    })
-                });
-                
-                if (!testResponse.ok) throw new Error('API connection failed');
-                
-                apiStatus.querySelector('span').textContent = "API Status: Connected to Gemini 2.0 Flash";
-                apiStatus.querySelector('.status-dot').style.backgroundColor = '#4caf50';
-            } catch (error) {
-                console.error('API Connection Test Failed:', error);
-                apiStatus.querySelector('.status-dot').style.backgroundColor = '#f44336';
-                apiStatus.querySelector('span').textContent = "API Status: Connection Failed";
-                addMessage("Warning: Failed to connect to Gemini API. Some features may not work.", 'ai');
-            }
-        }
-        
-        // Event listeners
-        sendButton.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !sendButton.disabled) {
-                sendMessage();
-            }
-        });
-        
-        // Initial setup
-        chatInput.focus();
-        testAPIConnection();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
